@@ -1,10 +1,10 @@
 import argparse
 import random
 
-from src.MidiModel import EmotionLSTM
-from src.MidiUtils import create_vocab, sequence_to_midi, load_model
-from src.MidiPreprocess import build_dataset
-from src.MidiGenerate import generate
+from MidiModel import EmotionLSTM
+from MidiUtils import create_vocab, sequence_to_midi, load_model
+from MidiPreprocess import build_dataset
+from MidiGenerate import generate
 
 # Emotion label map
 emo_to_int = {"happy": 0, "tense": 1, "sad": 2, "peaceful": 3}

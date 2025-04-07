@@ -1,8 +1,8 @@
 import torch
 from torch.utils.data import DataLoader, TensorDataset
-from src.MidiModel import EmotionLSTM
-from src.MidiPreprocess import build_dataset
-from src.MidiUtils import create_vocab, notes_to_input_target, save_model
+from MidiModel import EmotionLSTM
+from MidiPreprocess import build_dataset
+from MidiUtils import create_vocab, notes_to_input_target, save_model
 
 # Paths
 midi_dir = "../data/EMOPIA_2.1/midis/"
@@ -30,7 +30,12 @@ e = torch.tensor(e, dtype=torch.long)
 loader = DataLoader(TensorDataset(X, e, y), batch_size=64, shuffle=True)
 
 # Train
-model = EmotionLSTM(len(note_to_int), 64, 128, 16, 4).to("cuda")
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+model = EmotionLSTM(len(note_to_int), 64, 128, 16, 4).to(device)
+
+for xb, eb, yb in loader:
+    xb, eb, yb = xb.to(device), eb.to(device), yb.to(device)
+
 opt = torch.optim.Adam(model.parameters(), lr=0.001)
 loss_fn = torch.nn.CrossEntropyLoss()
 
@@ -38,7 +43,8 @@ for epoch in range(10):
     model.train()
     total = 0
     for xb, eb, yb in loader:
-        xb, eb, yb = xb.cuda(), eb.cuda(), yb.cuda()
+        # Move tensors to the appropriate device
+        xb, eb, yb = xb.to(device), eb.to(device), yb.to(device)
         out = model(xb, eb)
         loss = loss_fn(out, yb)
         opt.zero_grad()

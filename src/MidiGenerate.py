@@ -4,16 +4,19 @@ from src.MidiUtils import sequence_to_midi, load_model
 
 
 def generate(model, seed, emotion_id, length=50):
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.eval()
+    input_seq = torch.tensor(seed[-32:], dtype=torch.long).unsqueeze(0).to(device)
+    emotion_tensor = torch.tensor([emotion_id], dtype=torch.long).to(device)
     result = seed[:]
-    input_seq = torch.tensor(seed[-32:], dtype=torch.long).unsqueeze(0).to("cuda")
-    emotion = torch.tensor([emotion_id]).to("cuda")
 
-    for _ in range(length):
-        out = model(input_seq, emotion)
-        next_note = torch.argmax(out, dim=1).item()
-        result.append(next_note)
-        input_seq = torch.cat([input_seq[:, 1:], torch.tensor([[next_note]]).to("cuda")], dim=1)
+    with torch.no_grad():
+        for _ in range(length):
+            output = model(input_seq, emotion_tensor)
+            _, predicted = torch.max(output, dim=1)
+            result.append(predicted.item())
+            input_seq = torch.cat([input_seq[:, 1:], predicted.unsqueeze(0)], dim=1)
+
     return result
 
 # Example usage:
